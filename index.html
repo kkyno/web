@@ -2,344 +2,551 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>长征·星途回忆录</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长征绘途 - 序幕：瑞金出发</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
+        /* 游戏基础复古样式定义 */
+        * {
+            box-sizing: border-box;
             margin: 0;
-            overflow: hidden;
-            background: #0c0c1a;
-            font-family: "Microsoft YaHei", sans-serif;
-            color: #fff;
+            padding: 0;
+            user-select: none;
         }
-        canvas { display: block; }
-        /* 信息弹窗 */
-        .info-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(10,20,40,0.85);
-            border: 1px solid #ffd700;
-            padding: 20px;
-            max-width: 400px;
-            display: none;
-            z-index: 10;
-            border-radius: 8px;
-        }
-        .info-popup h3 { color: #ffd700; margin-bottom: 10px; }
-        /* 回忆页 */
-        #memoryPage {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #0b1020;
-            z-index: 20;
-            display: none;
-            overflow-y: auto;
-            padding: 50px;
-        }
-        .memory-item {
-            margin: 80px auto;
-            max-width: 600px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #ffd70055;
-            padding: 30px;
-            border-radius: 12px;
-        }
-        .memory-item h2 { color: #ffd700; margin-bottom: 15px; }
-        .interactive-obj {
-            width: 80px; height: 80px;
-            margin: 20px auto;
-            background: #fff2;
-            border-radius: 8px;
+
+        body {
+            background-color: #0b0b0f;
+            color: #e2dcd0;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
-            align-items: center; justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
-        .interactive-obj:hover { background: #fff4; transform: scale(1.05); }
+
+        /* 游戏舞台外框 */
+        #game-wrapper {
+            position: relative;
+            width: 960px;
+            height: 540px;
+            border: 6px solid #2d2d38;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.9);
+            background-color: #101014;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 视口容器：用于包裹主Canvas，处理滚轮缩放与鼠标指针 */
+        #viewport {
+            position: relative;
+            width: 100%;
+            height: 420px;
+            overflow: hidden;
+            background-color: #000;
+            cursor: grab;
+        }
+        #viewport:active { cursor: grabbing; }
+
+        /* 主渲染Canvas：开启近邻像素不模糊模式 */
+        #main-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: 0 0; /* 极其关键：配合JS计算鼠标定点缩放 */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* 底部叙事与对话框区 */
+        #narrative-bar {
+            flex: 1;
+            background-color: #161622;
+            border-top: 4px solid #2d2d38;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #dialogue-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #c2b9a7;
+            max-width: 75%;
+            white-space: pre-line;
+        }
+
+        /* 通用像素风复古按钮 */
+        .pixel-btn {
+            background-color: #a33835;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: -3px 0 0 #5a1e1c, 3px 0 0 #5a1e1c, 0 -3px 0 #5a1e1c, 0 3px 0 #5a1e1c;
+            transition: background 0.1s;
+        }
+        .pixel-btn:hover { background-color: #bc4340; }
+        .pixel-btn:active { transform: translate(1px, 1px); }
+
+        /* --- 弹窗系统（3-A 中央遮罩层） --- */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 像素风弹窗盒 */
+        .pixel-modal {
+            background-color: #22222e;
+            border: 4px solid #4d4d66;
+            padding: 24px;
+            width: 450px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .modal-title {
+            color: #e6a15c;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: #c2b9a7;
+            line-height: 1.5;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        /* 独立预留高精图片接口 (2-C) */
+        .object-preview-slot {
+            width: 120px;
+            height: 120px;
+            border: 2px dashed #4d4d66;
+            background-color: #181824;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .object-preview-slot img {
+            max-width: 100%;
+            max-height: 100%;
+            image-rendering: pixelated;
+        }
+
+        /* 画布交互面板特化 */
+        .paint-box {
+            width: 192px;
+            height: 192px;
+            border: 4px solid #e6a15c;
+            background-color: #14141a;
+        }
+        #paint-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            image-rendering: pixelated;
+        }
+
+        /* 调色盘 */
+        .palette {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .color-dot {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #3a3a4a;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .color-dot.active {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+
+        /* 关闭按钮 */
+        .close-x {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #8a8a9a;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .close-x:hover { color: #fff; }
     </style>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭐</text></svg>">
 </head>
 <body>
-    <!-- 3D 场景容器 -->
-    <div id="container"></div>
 
-    <!-- 信息弹窗 -->
-    <div class="info-popup" id="infoPopup">
-        <h3 id="popupTitle">场景标题</h3>
-        <p id="popupText">场景描述内容</p>
+    <div id="game-wrapper">
+        <div id="viewport" id="viewport">
+            <canvas id="main-canvas" width="960" height="540"></canvas>
+        </div>
+
+        <div id="narrative-bar">
+            <div id="dialogue-text">正在唤醒瑞金指挥部记忆...</div>
+            <button class="pixel-btn" id="next-stage-btn" style="display: none; background-color: #437a43; box-shadow: -3px 0 0 #234723, 3px 0 0 #234723, 0 -3px 0 #234723, 0 3px 0 #234723;">开启长征</button>
+        </div>
+
+        <div class="overlay" id="inspect-overlay">
+            <div class="pixel-modal">
+                <span class="close-x" id="inspect-close">×</span>
+                <div class="modal-title" id="inspect-title">物件名称</div>
+                <div class="object-preview-slot">
+                    <img id="inspect-img" src="" alt="等待切图放入...">
+                </div>
+                <div class="modal-desc" id="inspect-desc">物件详细描述...</div>
+            </div>
+        </div>
+
+        <div class="overlay" id="paint-overlay">
+            <div class="pixel-modal" style="width: 320px;">
+                <span class="close-x" id="paint-close">×</span>
+                <div class="modal-title">【手绘：煤油灯芯】</div>
+                <div class="paint-box">
+                    <canvas id="paint-canvas" width="64" height="64"></canvas>
+                </div>
+                <div class="palette">
+                    <div class="color-dot active" style="background-color: #ffcc4d;" data-color="#ffcc4d"></div>
+                    <div class="color-dot" style="background-color: #e67e22;" data-color="#e67e22"></div>
+                    <div class="color-dot" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                </div>
+                <div style="display: flex; gap: 15px; width: 100%;">
+                    <button class="pixel-btn" id="paint-clear" style="flex:1; background-color:#555; box-shadow:-3px 0 0 #333, 3px 0 0 #333, 0 -3px 0 #333, 0 3px 0 #333;">擦除</button>
+                    <button class="pixel-btn" id="paint-submit" style="flex:1;">注入灯芯</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- 回忆页 -->
-    <div id="memoryPage">
-        <div class="memory-item">
-            <h2>瑞金出发 · 1934</h2>
-            <div class="interactive-obj" onclick="alert('八角帽：初心与使命')">八角帽</div>
-            <p>红军告别苏区，踏上二万五千里的漫漫征途。</p>
-        </div>
-        <div class="memory-item">
-            <h2>遵义会议 · 转折</h2>
-            <div class="interactive-obj" onclick="alert('油灯：黑暗中的光芒')">油灯</div>
-            <p>确立正确领导，中国革命迎来生死攸关的转折点。</p>
-        </div>
-        <div class="memory-item">
-            <h2>飞夺泸定桥 · 无畏</h2>
-            <div class="interactive-obj" onclick="alert('铁索：勇士的足迹')">铁索</div>
-            <p>22勇士攀铁链冲锋，突破天险。</p>
-        </div>
-        <div class="memory-item">
-            <h2>雪山草地 · 坚韧</h2>
-            <div class="interactive-obj" onclick="alert('草鞋：踏遍千山万水')">草鞋</div>
-            <p>饥寒交迫，信仰不灭，一步步走出绝境。</p>
-        </div>
-        <div class="memory-item">
-            <h2>胜利会师 · 1936</h2>
-            <div class="interactive-obj" onclick="alert('红星：信仰永恒')">红星</div>
-            <p>三大主力会师，长征胜利结束，精神永垂不朽。</p>
-            <button style="margin-top:30px;padding:10px 20px;background:#ffd700;color:#000;border:none;border-radius:6px;" onclick="closeMemoryPage()">返回星途</button>
-        </div>
-    </div>
+<script>
+    // --- 1. 配置项：资产路径与交互热区 (3-A方案) ---
+    const IMG_LIGHT_PATH = './微信图片_20260601213026_322_1249.jpg'; // 图一：亮灯
+    const IMG_DARK_PATH  = './游戏背景底图.jpg';                     // 图二：暗灯
 
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    // 各大物件在 960x540 分辨率下的矩形点击热区
+    const HITBOXES = {
+        map:       { x: 30,  y: 310, w: 100, h: 100, name: "墙上的军用地图", desc: "地图上画着苏区周围错综复杂的山道，由于煤油灯燃尽，大部队的撤退路线已经一片模糊……", img: "./map_hd.png" },
+        telescope: { x: 470, y: 310, w: 40,  h: 30,  name: "蔡司双筒望远镜", desc: "镜身漆皮有些磨损。透过它，曾看清过无数次敌人的前哨碉堡。", img: "./tele_hd.png" },
+        stove:     { x: 720, y: 300, w: 160, h: 220, name: "正燃烧的铁皮炉", desc: "炉火正旺，发出微弱的哔啵声。这或许是长征出发前，全指挥部唯一的温度了。", img: "./stove_hd.png" },
+        lamp:      { x: 575, y: 310, w: 30,  h: 50,  name: "煤油灯", desc: "灯芯烧秃了，警卫员正焦急地看着你。", img: "" }
+    };
+
+    // --- 2. 核心状态机 ---
+    const G = {
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0,
+        isDragging: false,
+        startX: 0, startY: 0,
+        
+        // 游戏叙事阶段：0 开场由亮变暗，1 黑暗探索阶段，2 核心画灯芯阶段，3 点亮通关阶段
+        stage: 0,
+        darkAlpha: 0, // 用于开场由亮变暗及结尾由暗变亮的渐变滤青透明度
+        
+        particles: [], // 4-B 高阶像素微粒系统
+        isDrawing: false,
+        brushColor: '#ffcc4d'
+    };
+
+    // --- 3. 初始化 Canvas 与图片资产 ---
+    const canvas = document.getElementById('main-canvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = document.getElementById('viewport');
+
+    const imgLight = new Image(); imgLight.src = IMG_LIGHT_PATH;
+    const imgDark  = new Image(); imgDark.src = IMG_DARK_PATH;
+
+    let assetsLoaded = 0;
+    function checkAssets() {
+        assetsLoaded++;
+        if(assetsLoaded === 2) {
+            initGame();
         }
     }
-    </script>
+    imgLight.onload = checkAssets;
+    imgDark.onload = checkAssets;
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-        let scene, camera, renderer, controls;
-        let stars = [], pathStars = [], highlightStars = [];
-        let endStar;
-        let scrollY = 0;
-        let raycaster = new THREE.Raycaster();
-        let mouse = new THREE.Vector2();
-        let infoPopup = document.getElementById('infoPopup');
-        let isMemoryOpen = false;
-
-        // 长按变量
-        let pressTimer = null;
-        let pressTime = 800; // 长按800ms触发
-
-        init();
-        animate();
-
-        function init() {
-            // 场景
-            scene = new THREE.Scene();
-
-            // 相机
-            camera = new THREE.PerspectiveCamera(
-                75, window.innerWidth / window.innerHeight, 0.1, 200
-            );
-            camera.position.set(0, 30, 50);
-
-            // 渲染器
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('container').appendChild(renderer.domElement);
-
-            // 控制器（仅调试可用，可注释）
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-
-            // 光照
-            let light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(0, 50, 50);
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0x404040, 0.6));
-
-            // 创建星空（初始盘旋）
-            createSkyStars();
-
-            // 创建路径星星（后面滚动会动）
-            createPathStars();
-
-            // 创建尽头大五角星
-            createEndStar();
-
-            // 监听
-            window.addEventListener('scroll', onScroll);
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mousedown', onMouseDown);
-            window.addEventListener('mouseup', onMouseUp);
-            window.addEventListener('resize', onResize);
-        }
-
-        // 1. 初始满天星
-        function createSkyStars() {
-            for (let i = 0; i < 800; i++) {
-                let geo = new THREE.SphereGeometry(0.15, 8, 8);
-                let mat = new THREE.MeshBasicMaterial({
-                    color: 0xffffff, transparent: true, opacity: 0.7
-                });
-                let star = new THREE.Mesh(geo, mat);
-                star.position.set(
-                    (Math.random()-0.5)*100,
-                    Math.random()*60+10,
-                    (Math.random()-0.5)*100
-                );
-                star.userData.isSkyStar = true;
-                scene.add(star);
-                stars.push(star);
+    // --- 4. 游戏启动逻辑与打字机叙事 ---
+    const dialogueEl = document.getElementById('dialogue-text');
+    function triggerDialogue(text) {
+        dialogueEl.innerText = "";
+        let i = 0;
+        function type() {
+            if(i < text.length) {
+                dialogueEl.innerText += text.charAt(i);
+                i++;
+                setTimeout(type, 35);
             }
         }
+        type();
+    }
 
-        // 2. 星路 + 两侧高亮交互星星
-        function createPathStars() {
-            // 路径主体
-            for (let i = 0; i < 200; i++) {
-                let geo = new THREE.SphereGeometry(0.2, 8, 8);
-                let mat = new THREE.MeshBasicMaterial({
-                    color: 0xffd700, transparent: true, opacity: 0.8
-                });
-                let star = new THREE.Mesh(geo, mat);
-                star.position.set(
-                    (Math.random()-0.5)*15,
-                    0,
-                    -i * 1.2
-                );
-                star.userData.isPathStar = true;
-                star.userData.baseZ = -i * 1.2;
-                scene.add(star);
-                pathStars.push(star);
-            }
-
-            // 两侧高亮交互星星（带内容）
-            let eventData = [
-                { x: 12, z: -20, title: "瑞金出发", text: "1934年10月，中央红军开始长征。" },
-                { x: -12, z: -40, title: "血战湘江", text: "突破四道封锁线，损失惨重。" },
-                { x: 12, z: -60, title: "遵义会议", text: "确立毛泽东领导，生死转折。" },
-                { x: -12, z: -80, title: "飞夺泸定桥", text: "22勇士攀铁索冲锋。" },
-                { x: 12, z: -100, title: "翻雪山", text: "严寒缺氧，战士们相互搀扶前进。" },
-                { x: -12, z: -120, title: "过草地", text: "沼泽遍布，饥饿与死亡相伴。" },
-                { x: 12, z: -140, title: "胜利会师", text: "1936年10月，三大主力会师甘肃会宁。" }
-            ];
-
-            eventData.forEach(d => {
-                let geo = new THREE.SphereGeometry(0.4, 8, 8);
-                let mat = new THREE.MeshBasicMaterial({
-                    color: 0xffaa00, transparent: true, opacity: 1
-                });
-                let star = new THREE.Mesh(geo, mat);
-                star.position.set(d.x, 1, d.z);
-                star.userData = {
-                    isHighlight: true,
-                    title: d.title,
-                    text: d.text
-                };
-                scene.add(star);
-                highlightStars.push(star);
-            });
-        }
-
-        // 3. 尽头大五角星
-        function createEndStar() {
-            let geo = new THREE.OctahedronGeometry(2.5, 0);
-            let mat = new THREE.MeshBasicMaterial({
-                color: 0xffd700, transparent: true, opacity: 0.9
-            });
-            endStar = new THREE.Mesh(geo, mat);
-            endStar.position.set(0, 2, -180);
-            endStar.userData.isEndStar = true;
-            scene.add(endStar);
-        }
-
-        // 滚动 → 相机下移 + 星路展开
-        function onScroll(e) {
-            if (isMemoryOpen) return;
-            scrollY = window.scrollY;
-            // 相机跟着往前
-            camera.position.z = 50 - scrollY * 0.3;
-            camera.position.y = 30 - scrollY * 0.1;
-        }
-
-        // 鼠标移动 → 射线检测高亮星星
-        function onMouseMove(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            let intersects = raycaster.intersectObjects(highlightStars);
-
-            if (intersects.length > 0) {
-                let obj = intersects[0].object;
-                obj.material.color.set(0xffffff);
-                obj.scale.set(1.3, 1.3, 1.3);
-                // 显示弹窗
-                infoPopup.style.display = 'block';
-                document.getElementById('popupTitle').innerText = obj.userData.title;
-                document.getElementById('popupText').innerText = obj.userData.text;
+    function initGame() {
+        // 第一阶段：开场展示亮灯场景，随后在 3 秒内平滑过渡到不亮灯
+        triggerDialogue("1934年深秋，江西瑞金。你在一间老旧的指挥部里醒来，桌上摊开一张泛黄的军用地图...");
+        
+        let startTime = Date.now();
+        function transitionToDark() {
+            let elapsed = Date.now() - startTime;
+            G.darkAlpha = Math.min(elapsed / 3000, 1); // 3秒从亮完全切到暗
+            
+            if(G.darkAlpha < 1) {
+                requestAnimationFrame(transitionToDark);
             } else {
-                highlightStars.forEach(star => {
-                    star.material.color.set(0xffaa00);
-                    star.scale.set(1,1,1);
-                });
-                infoPopup.style.display = 'none';
+                G.stage = 1; // 正式进入黑暗探索阶段
+                triggerDialogue("年轻的警卫员匆匆走来，把一盏油灯推向你：“同志，灯芯燃尽了……看不清地图，后面的战略转移路线就全错了！” \n【系统提示：请通过鼠标滚轮观察房间，寻找并点击点击煤油灯修复】");
             }
+        }
+        setTimeout(transitionToDark, 2000); // 亮屏欣赏2秒后再变暗
+        
+        // 启动主循环渲染
+        drawLoop();
+    }
 
-            // 检测尽头星星
-            let endIntersect = raycaster.intersectObject(endStar);
-            if (endIntersect.length > 0) {
-                endStar.material.color.set(0xffffff);
+    // --- 5. 1-B 定点滚轮缩放与平移操控逻辑 ---
+    viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = 1.1;
+        let nextZoom = G.zoom;
+        
+        if(e.deltaY < 0) nextZoom *= zoomFactor;
+        else nextZoom /= zoomFactor;
+        
+        // 限制缩放范围在 1倍 到 4倍 之间
+        nextZoom = Math.max(1, Math.min(4, nextZoom));
+
+        // 核心算法：以鼠标当前视口坐标为中心点进行像素缩放
+        const rect = viewport.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        G.offsetX = mouseX - (mouseX - G.offsetX) * (nextZoom / G.zoom);
+        G.offsetY = mouseY - (mouseY - G.offsetY) * (nextZoom / G.zoom);
+        G.zoom = nextZoom;
+
+        // 边界锁死限制
+        if(G.zoom === 1) { G.offsetX = 0; G.offsetY = 0; }
+        updateCanvasTransform();
+    });
+
+    // 拖拽平移场景
+    viewport.addEventListener('mousedown', (e) => {
+        if (e.target !== viewport && e.target !== canvas) return;
+        if (G.zoom === 1) return;
+        G.isDragging = true;
+        G.startX = e.clientX - G.offsetX;
+        G.startY = e.clientY - G.offsetY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!G.isDragging) return;
+        G.offsetX = e.clientX - G.startX;
+        G.offsetY = e.clientY - G.startY;
+        updateCanvasTransform();
+    });
+    window.addEventListener('mouseup', () => G.isDragging = false);
+
+    function updateCanvasTransform() {
+        canvas.style.transform = `translate(${G.offsetX}px, ${G.offsetY}px) scale(${G.zoom})`;
+    }
+
+    // --- 6. 3-A 热区点击碰撞检测与镜头定点重置 (2-B方案) ---
+    canvas.addEventListener('click', (e) => {
+        if(G.stage !== 1) return; // 只有在探索期允许点击物件
+
+        // 换算鼠标点击在 Canvas(960x540) 上的真实像素坐标
+        const rect = canvas.getBoundingClientRect();
+        const clickX = (e.clientX - rect.left) / G.zoom;
+        const clickY = (e.clientY - rect.top) / G.zoom;
+
+        // 遍历比对四大热区
+        for(let key in HITBOXES) {
+            let box = HITBOXES[key];
+            if(clickX >= box.x && clickX <= box.x + box.w && clickY >= box.y && clickY <= box.y + box.h) {
+                
+                // 2-B 方案：点击物件时，镜头瞬间完美重置全景
+                G.zoom = 1; G.offsetX = 0; G.offsetY = 0;
+                updateCanvasTransform();
+
+                if(key === 'lamp') {
+                    // 点击的是核心物件煤油灯 $\rightarrow$ 打开画板弹窗
+                    document.getElementById('paint-overlay').classList.add('active');
+                } else {
+                    // 点击的是普通叙事物件 $\rightarrow$ 打开 2-C 考察弹窗
+                    document.getElementById('inspect-title').innerText = box.name;
+                    document.getElementById('inspect-desc').innerText = box.desc;
+                    document.getElementById('inspect-img').src = box.img; // 加载对应独立切图
+                    document.getElementById('inspect-overlay').classList.add('active');
+                }
+                break;
+            }
+        }
+    });
+
+    // 关闭普通物件弹窗
+    document.getElementById('inspect-close').addEventListener('click', () => {
+        document.getElementById('inspect-overlay').classList.remove('active');
+    });
+
+    // --- 7. 网页内置 64x64 像素画板功能 ---
+    const pCanvas = document.getElementById('paint-canvas');
+    const pCtx = pCanvas.getContext('2d');
+    pCtx.fillStyle = '#181824'; pCtx.fillRect(0,0,64,64); // 背景预填充
+
+    pCanvas.addEventListener('mousedown', () => G.isDrawing = true);
+    window.addEventListener('mouseup', () => G.isDrawing = false);
+    pCanvas.addEventListener('mousemove', (e) => {
+        if(!G.isDrawing) return;
+        const r = pCanvas.getBoundingClientRect();
+        const px = Math.floor((e.clientX - r.left) / r.width * 64);
+        const py = Math.floor((e.clientY - r.top) / r.height * 64);
+        pCtx.fillStyle = G.brushColor;
+        pCtx.fillRect(px, py, 2, 2); // 2x2粗笔触更具像素风质感
+    });
+
+    // 颜色更换
+    document.querySelectorAll('.color-dot').forEach(dot => {
+        dot.addEventListener('click', (e) => {
+            document.querySelector('.color-dot.active').classList.remove('active');
+            e.target.classList.add('active');
+            G.brushColor = e.target.dataset.color;
+        });
+    });
+    // 擦除
+    document.getElementById('paint-clear').addEventListener('click', () => {
+        pCtx.fillStyle = '#181824'; pCtx.fillRect(0,0,64,64);
+    });
+
+    // 关闭画板弹窗
+    document.getElementById('paint-close').addEventListener('click', () => {
+        document.getElementById('paint-overlay').classList.remove('active');
+    });
+
+    // --- 8. 4-B 高阶粒子大融合通关动画 ---
+    document.getElementById('paint-submit').addEventListener('click', () => {
+        document.getElementById('paint-overlay').classList.remove('active');
+        G.stage = 2; // 切换进入融合过渡状态
+
+        triggerDialogue("随着崭新的灯芯被注入，火光轰然点亮！微弱的像素光芒驱散了漫漫长夜，地图上赫然浮现出了长征的第一步路线！");
+
+        // 4-B 高阶版渐变点亮过程
+        let startTime = Date.now();
+        function fadeToLight() {
+            let elapsed = Date.now() - startTime;
+            G.darkAlpha = 1 - Math.min(elapsed / 2500, 1); // 2.5秒内将暗色遮罩淡出
+            
+            if(G.darkAlpha > 0) {
+                requestAnimationFrame(fadeToLight);
             } else {
-                endStar.material.color.set(0xffd700);
+                G.stage = 3; // 正式进入完全通关呼吸阶段
+                document.getElementById('next-stage-btn').style.display = 'block';
             }
         }
+        fadeToLight();
+    });
 
-        // 鼠标按下 → 长按检测
-        function onMouseDown(e) {
-            raycaster.setFromCamera(mouse, camera);
-            let intersects = raycaster.intersectObject(endStar);
-            if (intersects.length > 0) {
-                pressTimer = setTimeout(() => {
-                    openMemoryPage();
-                }, pressTime);
-            }
-        }
-
-        function onMouseUp() {
-            clearTimeout(pressTimer);
-        }
-
-        function openMemoryPage() {
-            isMemoryOpen = true;
-            document.getElementById('memoryPage').style.display = 'block';
-        }
-
-        function closeMemoryPage() {
-            isMemoryOpen = false;
-            document.getElementById('memoryPage').style.display = 'none';
-        }
-
-        function onResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-
-            // 星空缓慢旋转
-            stars.forEach(star => {
-                star.rotation.y += 0.001;
+    // 4-B 像素微粒生成器（向上飘散的火星）
+    function createPixelParticle() {
+        if(G.stage >= 2 && Math.random() < 0.15) { // 概率控制粒子数量
+            G.particles.push({
+                x: 585 + (Math.random() * 10 - 5), // 提灯灯芯的真实坐标位置
+                y: 325,
+                size: Math.random() * 3 + 1,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: -Math.random() * 0.6 - 0.3,
+                alpha: 1,
+                color: Math.random() > 0.4 ? '#ffcc4d' : '#e67e22'
             });
-
-            // 尽头星星缓慢转动
-            endStar.rotation.y += 0.005;
-            endStar.rotation.x += 0.002;
-
-            renderer.render(scene, camera);
         }
-    </script>
+    }
+
+    // --- 9. 主图像循环像素渲染核心引擎 ---
+    function drawLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // A. 基础图层渲染
+        if (G.stage === 0 || G.stage === 1) {
+            // 开场与探索阶段，渲染图二（暗色背景底图）
+            ctx.drawImage(imgDark, 0, 0, canvas.width, canvas.height);
+        } else {
+            // 通关与融合阶段，渲染图一（点亮底图）作为最底层
+            ctx.drawImage(imgLight, 0, 0, canvas.width, canvas.height);
+            
+            // 如果还处于渐变过渡态中，用暗图通过透明度做叠底融合
+            if(G.stage === 2) {
+                ctx.globalAlpha = G.darkAlpha;
+                ctx.drawImage(imgDark, 0, 0, canvas.width, canvas.height);
+                ctx.globalAlpha = 1.0;
+            }
+            
+            // 4-B 实时提取玩家手绘纹理，无缝融合进宏大场景对应提灯坐标中！
+            ctx.drawImage(pCanvas, 580, 320, 16, 16);
+
+            // B. 4-B高阶像素呼吸灯光晕渲染
+            const breathe = Math.sin(Date.now() * 0.004) * 5; // 精确控制动态光晕频率
+            const gradient = ctx.createRadialGradient(588, 328, 2, 588, 328, 45 + breathe);
+            gradient.addColorStop(0, 'rgba(255, 204, 77, 0.45)');
+            gradient.addColorStop(0.5, 'rgba(230, 126, 34, 0.15)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // C. 4-B像素火星烟雾微粒绘制与轨迹计算
+            createPixelParticle();
+            for(let i = G.particles.length - 1; i >= 0; i--) {
+                let p = G.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.01; // 平滑消逝
+                if(p.alpha <= 0) {
+                    G.particles.splice(i, 1);
+                    continue;
+                }
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.fillRect(Math.floor(p.x), Math.floor(p.y), Math.floor(p.size), Math.floor(p.size));
+            }
+            ctx.globalAlpha = 1.0; // 还原Alpha
+        }
+
+        requestAnimationFrame(drawLoop);
+    }
+
+    // 下一关跳转
+    document.getElementById('next-stage-btn').addEventListener('click', () => {
+        alert("🎉 序幕通关！下一关卡：【血战湘江·架设像素浮桥】正在解锁中...");
+    });
+</script>
 </body>
 </html>
