@@ -3,646 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>长征绘途 - 终章：会宁红旗 (高保真交互版)</title>
+    <title>长征绘途 - 三军会师</title>
     <style>
+        /* 像素风通用重置 */
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            image-rendering: pixelated;
+            font-family: 'Courier New', Courier, monospace, sans-serif;
             user-select: none;
         }
-
-        body {
-            background-color: #0d0d11;
-            color: #e2dcd0;
-            font-family: 'Courier New', Courier, "SimHei", monospace;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        /* 🔴 完美的复古红框系统外壳（像素风格） */
-        #game-wrapper {
-            position: relative;
-            width: 1000px;
-            height: 630px;
-            background-color: #2b1611;
-            border: 6px solid #1a0b08;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
-            overflow: hidden;
-        }
-
-        /* 顶部功能栏（带复古元素） */
-        #top-header-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
+        body, html {
+            margin: 0;
+            padding: 0;
             width: 100%;
-            height: 50px;
-            background-color: #4a1f17;
-            border-bottom: 4px solid #1a0b08;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        #progress-container {
-            width: 120px;
-            height: 16px;
-            background-color: #1a0b08;
-            border: 2px solid #8e3221;
-            padding: 2px;
-        }
-        #top-progressbar {
-            width: 90%; /* 会师前夕 90% */
             height: 100%;
-            background-color: #de2910;
-            transition: width 1.5s cubic-bezier(0.1, 0.8, 0.3, 1);
-        }
-
-        #top-decorations {
-            margin-left: 20px;
-            color: #8e3221;
-            font-size: 18px;
-            letter-spacing: 5px;
-        }
-
-        #window-close-icon {
-            position: absolute;
-            right: 20px;
-            top: 12px;
-            color: #8e3221;
-            font-weight: bold;
-            font-size: 18px;
-            border: 2px solid #8e3221;
-            padding: 0 6px;
-        }
-
-        /* 中央视窗（完美承载 Canvas 核心画面） */
-        #viewport {
-            position: absolute;
-            top: 80px;
-            left: 45px;
-            width: 910px;
-            height: 365px;
-            overflow: hidden;
             background-color: #000;
-            border: 4px solid #1a0b08;
-            cursor: grab;
-        }
-        #viewport:active { cursor: grabbing; }
-
-        #main-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            transform-origin: 0 0;
-            image-rendering: pixelated;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
 
-        /* 底部灰色文本长条叙事区 */
-        #narrative-text {
-            position: absolute;
-            bottom: 35px;
-            left: 45px;
-            width: 910px;
-            height: 120px;
-            background-color: #484541;
-            border: 4px solid #1a0b08;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
-            padding: 16px 24px;
-            font-size: 16px;
-            line-height: 1.6;
-            color: #f3f1ed;
-            font-family: "SimSun", "宋体", serif;
-            font-weight: bold;
-            white-space: pre-line;
-            pointer-events: none;
+        /* 游戏主容器 */
+        #game-container {
+            position: relative;
+            width: 1024px;
+            height: 576px;
+            background: url('7.jpg') no-repeat center/cover;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
 
-        /* 全局遮罩层 */
-        .overlay {
+        /* 通关视频（初时隐藏） */
+        #victory-video {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.75);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 99;
-        }
-        .overlay.active {
-            opacity: 1;
-            pointer-events: auto;
+            object-fit: cover;
+            display: none;
+            z-index: 5;
         }
 
-        /* 🟫 高精对齐像素红框「作战地图」绘制面板 */
-        #paint-panel {
-            position: relative;
-            width: 640px;
-            height: 480px;
-            background-color: #5c3427;
-            border: 6px solid #de2910;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        #paint-title {
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: bold;
-            font-family: "SimHei", sans-serif;
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 0px #000;
-        }
-
-        #paint-close-x {
+        /* 红旗交互热区 */
+        #flag-hotspot {
             position: absolute;
-            top: 15px;
-            right: 20px;
-            color: #ffffff;
-            font-size: 24px;
+            left: 480px; /* 根据视频中红旗台的大致位置微调 */
+            top: 320px;
+            width: 70px;
+            height: 110px;
             cursor: pointer;
-            font-weight: bold;
+            z-index: 2;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        /* 悬停时的淡黄色像素感光圈 */
+        #flag-hotspot:hover {
+            background-color: rgba(244, 204, 112, 0.2);
+            box-shadow: 0 0 0 6px #f4cc70, 0 0 15px #f4cc70;
+            outline: 3px dashed #230a0a;
         }
 
-        .workbench-flex {
+        /* 核心红色像素风 UI 弹窗 */
+        #paint-dialog {
+            display: none; /* 默认隐藏 */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 640px;
+            background-color: #4a1c1c;
+            border: 6px solid #230a0a;
+            box-shadow: inset -4px -4px 0px #311111, inset 4px 4px 0px #632a2a;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        /* 弹窗标题 */
+        .dialog-header {
             display: flex;
-            gap: 40px;
+            justify-content: space-between;
+            align-items: center;
+            color: #f4cc70;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 4px id #230a0a;
+            padding-bottom: 5px;
+            text-shadow: 2px 2px #000;
+        }
+        .close-btn {
+            cursor: pointer;
+            color: #b83232;
+            font-size: 24px;
+        }
+        .close-btn:hover { color: #f4cc70; }
+
+        /* 画布主对齐区域 */
+        .canvas-area {
+            display: flex;
+            justify-content: space-between;
             margin-bottom: 15px;
         }
-
-        .window-box {
+        .box-title {
+            color: #f4cc70;
+            font-size: 12px;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .canvas-wrapper {
+            width: 280px;
+            height: 280px;
+            background-color: #230a0a;
+            border: 4px solid #230a0a;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            position: relative;
+        }
+        .canvas-wrapper img, .canvas-wrapper canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
         }
 
-        .window-label {
-            font-size: 14px;
-            color: #f3f1ed;
-            font-weight: bold;
-            margin-bottom: 8px;
-            text-shadow: 1px 1px 0px #000;
-        }
-
-        /* 带有网格底纹的画布容器 */
-        .grid-canvas-container {
-            width: 220px;
-            height: 220px;
-            background-color: #2c1611;
-            border: 4px solid #1a0b08;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 13.75px 13.75px; /* 精准契合 16x16 缩放网格 */
+        /* 工具栏：颜色与橡皮擦 */
+        .toolbar {
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #ref-image-view {
-            width: 100%;
-            height: 100%;
-            image-rendering: pixelated;
-            object-fit: contain;
-        }
-
-        #paint-canvas {
-            width: 100%;
-            height: 100%;
-            cursor: crosshair;
-            image-rendering: pixelated;
-        }
-
-        /* 🎨 7色高保真像素色块调色盘 */
-        .palette-container {
-            display: flex;
             gap: 10px;
             margin-bottom: 20px;
-            background: #1a0b08;
-            padding: 6px 12px;
-            border-radius: 4px;
+            background-color: #311111;
+            padding: 8px;
+            border: 3px solid #230a0a;
         }
-        .color-cube {
-            width: 28px;
-            height: 28px;
-            border: 2px solid #000;
+        .color-picker {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #230a0a;
             cursor: pointer;
-            box-shadow: 1px 1px 0px rgba(255,255,255,0.1);
         }
-        .color-cube.active {
-            border-color: #ffffff;
-            transform: scale(1.15);
-            box-shadow: 0 0 8px #fff;
+        .color-picker.active {
+            border-color: #f4cc70;
+            transform: scale(1.1);
+        }
+        .eraser-btn {
+            padding: 4px 12px;
+            background-color: #b83232;
+            border: 3px solid #230a0a;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .eraser-btn.active {
+            background-color: #f4cc70;
+            color: #230a0a;
         }
 
-        /* 底部像素功能按钮 */
+        /* 底部大按钮区 */
         .btn-group {
             display: flex;
-            gap: 20px;
-            width: 100%;
-            padding: 0 10px;
+            justify-content: space-between;
+            gap: 15px;
         }
-
         .pixel-btn {
             flex: 1;
-            height: 46px;
-            font-family: 'SimHei', sans-serif;
+            padding: 12px;
             font-size: 16px;
             font-weight: bold;
-            color: white;
-            border: none;
+            border: 4px solid #230a0a;
             cursor: pointer;
-            box-shadow: -3px 0 0 #1a0b08, 3px 0 0 #1a0b08, 0 -3px 0 #1a0b08, 0 3px 0 #1a0b08;
-            text-shadow: 1px 1px 0px #000;
+            text-shadow: 1px 1px #000;
+            box-shadow: inset -3px -3px 0px rgba(0,0,0,0.3);
         }
-        #btn-clear { background-color: #555555; }
-        #btn-clear:hover { background-color: #666666; }
-        #btn-submit { background-color: #de2910; }
-        #btn-submit:hover { background-color: #e5432d; }
+        .btn-clear {
+            background-color: #5c5c5c;
+            color: #fff;
+        }
+        .btn-submit {
+            background-color: #b83232;
+            color: #f4cc70;
+        }
+        .pixel-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
 
-        /* 终章勋章弹窗 */
-        .medal-modal {
-            background-color: #2b1611;
-            border: 4px solid #f1c40f;
-            padding: 30px;
-            text-align: center;
-            width: 420px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        /* 通关成功大按钮 */
+        #victory-btn {
+            display: none;
+            position: absolute;
+            top: 75%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 40px;
+            background-color: #b83232;
+            color: #f4cc70;
+            font-size: 22px;
+            font-weight: bold;
+            border: 6px solid #230a0a;
+            box-shadow: 0 6px 0px #000, inset -4px -4px 0px rgba(0,0,0,0.4);
+            cursor: pointer;
+            z-index: 20;
+            text-shadow: 2px 2px #000;
+            animation: pulse 1.5s infinite;
         }
-        .medal-badge {
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, #f39c12 0%, #d35400 100%);
-            border: 4px solid #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            margin: 15px auto;
-            animation: flip 4s linear infinite;
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
-        @keyframes flip { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
     </style>
 </head>
 <body>
 
-    <div id="game-wrapper">
-        <div id="top-header-bar">
-            <div id="progress-container">
-                <div id="top-progressbar"></div>
+<div id="game-container">
+    <div id="flag-hotspot" title="点击绘制红旗"></div>
+
+    <video id="victory-video" src="8cc687a2022a29d59cb554ddb1709df1.mp4" playsinline></video>
+
+    <button id="victory-btn">进入下一关 ➔</button>
+
+    <div id="paint-dialog">
+        <div class="dialog-header">
+            <span>绘制「作战红旗」</span>
+            <span class="close-btn" id="close-dialog">×</span>
+        </div>
+        
+        <div class="canvas-area">
+            <div>
+                <div class="box-title">历史线索/参考</div>
+                <div class="canvas-wrapper">
+                    <img src="06_红旗.png" alt="参考红旗">
+                </div>
             </div>
-            <div id="top-decorations">▰▰▰ ◆ ▰▰▰</div>
-            <div id="window-close-icon">×</div>
-        </div>
-
-        <div id="viewport">
-            <canvas id="main-canvas" width="910" height="365"></canvas>
-        </div>
-
-        <div id="narrative-text">正在启动瑞金终极指挥控制端...</div>
-
-        <div class="overlay" id="paint-overlay">
-            <div id="paint-panel">
-                <span id="paint-close-x">×</span>
-                <div id="paint-title">绘制「会宁红旗」</div>
-                
-                <div class="workbench-flex">
-                    <div class="window-box">
-                        <div class="window-label">历史线索 / 参考</div>
-                        <div class="grid-canvas-container">
-                            <img id="ref-image-view" src="./06_红旗.png" alt="参考红旗">
-                        </div>
-                    </div>
-
-                    <div class="window-box">
-                        <div class="window-label">手绘交互层 (16x16)</div>
-                        <div class="grid-canvas-container" style="border-color: #f39c12;">
-                            <canvas id="paint-canvas" width="16" height="16"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="palette-container">
-                    <div class="color-cube" style="background-color: #de2910;" data-color="#de2910" title="革命红"></div>
-                    <div class="color-cube" style="background-color: #9e1c0d;" data-color="#9e1c0d" title="暗部红"></div>
-                    <div class="color-cube active" style="background-color: #ffde00;" data-color="#ffde00" title="五星黄"></div>
-                    <div class="color-cube" style="background-color: #7a431d;" data-color="#7a431d" title="木杆棕"></div>
-                    <div class="color-cube" style="background-color: #ffffff;" data-color="#ffffff" title="高光白"></div>
-                    <div class="color-cube" style="background-color: #1a0b08;" data-color="#1a0b08" title="线条黑"></div>
-                    <div class="color-cube" style="background-color: transparent; border: 2px dashed #ff4757;" data-color="transparent" title="擦除"></div>
-                </div>
-
-                <div class="btn-group">
-                    <button class="pixel-btn" id="btn-clear">清空画布</button>
-                    <button class="pixel-btn" id="btn-submit">注入场景</button>
+            <div>
+                <div class="box-title">手绘交互层 (平滑画笔)</div>
+                <div class="canvas-wrapper">
+                    <canvas id="paint-canvas" width="280" height="280"></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="overlay" id="medal-overlay">
-            <div class="medal-modal">
-                <h2 style="color:#f1c40f; letter-spacing:2px; font-size:22px; font-family:'SimHei';">★ 宣告长征胜利结束 ★</h2>
-                <div class="medal-badge">🎖️</div>
-                <p style="color:#f3f1ed; font-size:14px; line-height:1.8; text-align:left; font-family:'宋体'; margin-top:10px;">
-                    大部队已在会宁胜利会师！你亲手精心描绘的凯旋红旗已经立在会宁的高岗上，迎着朝阳与晚霞猎猎飘扬！<br><br>
-                    <strong>三军胜利会师，长征精神永放光芒！</strong>
-                </p>
-                <button class="pixel-btn" id="btn-reload" style="background-color:#f39c12; margin-top:20px; width:100%;">重新开启征途</button>
-            </div>
+        <div class="toolbar">
+            <div class="color-picker active" style="background-color: #b83232;" data-color="#b83232"></div> <div class="color-picker" style="background-color: #f4cc70;" data-color="#f4cc70"></div> <div class="color-picker" style="background-color: #5a3825;" data-color="#5a3825"></div> <div class="color-picker" style="background-color: #2d4538;" data-color="#2d4538"></div> <div class="color-picker" style="background-color: #334455;" data-color="#334455"></div> <div class="color-picker" style="background-color: #ffffff;" data-color="#ffffff"></div> <button class="eraser-btn" id="eraser">橡皮擦</button>
+        </div>
+
+        <div class="btn-group">
+            <button class="pixel-btn btn-clear" id="clear-canvas">擦除重画</button>
+            <button class="pixel-btn btn-submit" id="submit-canvas">注入场景</button>
         </div>
     </div>
+</div>
 
 <script>
-    // 🗄️ 原生素材与状态配置
-    const IMG_BG_BEFORE = './7.jpg';       // 图一：立旗前
-    const IMG_BG_AFTER  = './背景7.jpg';   // 图二：立旗后
-    const IMG_REF_FLAG  = './06_红旗.png';   // 官方红旗
-
-    // 旗杆位置精确定位热区（契合高坡山顶）
-    const POLE_BOX = { x: 440, y: 110, w: 60, h: 140 };
-
-    const G = {
-        zoom: 1, offsetX: 0, offsetY: 0,
-        isDragging: false, startX: 0, startY: 0,
-        stage: 1, // 1:悬停寻找 2:战士冲锋 2.5:底图平滑大渐变 3:欢庆胜利
-        bgFade: 0,
-        mouseInPole: false,
-        soldiers: [],
-        isDrawing: false, brushColor: '#ffde00',
-        wavePhase: 0,
-        flagShapeImg: null, // 用于动态提取旗帜轮廓
-        loadedCount: 0
-    };
-
-    const canvas = document.getElementById('main-canvas');
+    // DOM 元素获取
+    const hotspot = document.getElementById('flag-hotspot');
+    const dialog = document.getElementById('paint-dialog');
+    const closeDialog = document.getElementById('close-dialog');
+    const canvas = document.getElementById('paint-canvas');
     const ctx = canvas.getContext('2d');
-    const viewport = document.getElementById('viewport');
+    const video = document.getElementById('victory-video');
+    const victoryBtn = document.getElementById('victory-btn');
+    
+    const clearBtn = document.getElementById('clear-canvas');
+    const submitBtn = document.getElementById('submit-canvas');
+    const eraserBtn = document.getElementById('eraser');
+    const colorPickers = document.querySelectorAll('.color-picker');
 
-    // 核心静态资源平滑装载
-    const bg1 = new Image(); bg1.src = IMG_BG_BEFORE;
-    const bg2 = new Image(); bg2.src = IMG_BG_AFTER;
-    const refFlag = new Image(); refFlag.src = IMG_REF_FLAG;
+    // 绘画状态变量
+    let isPainting = false;
+    let currentColor = '#b83232';
+    let isEraser = false;
+    let brushSize = 8;
 
-    function checkAssets() {
-        G.loadedCount++;
-        if(G.loadedCount === 3) {
-            // 提取红旗素材轮廓，用于完美生成“物品形状”的黄色悬停虚线
-            createFlagShapeSilhouette();
-            printStory("会宁高地环境装载就绪。\n[线索：请在中央高坡山顶寻找插旗点立起红旗]");
-        }
-    }
-    bg1.onload = checkAssets;
-    bg2.onload = checkAssets;
-    refFlag.onload = checkAssets;
+    // 初始化画布背景（透明）
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-    // 动态生成半透明黄色物品形状轮廓函数
-    function createFlagShapeSilhouette() {
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = refFlag.width; tempCanvas.height = refFlag.height;
-        const tCtx = tempCanvas.getContext('2d');
-        tCtx.drawImage(refFlag, 0, 0);
-        const imgData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-        // 将所有非透明像素染成明亮的金黄色
-        for (let i = 0; i < imgData.data.length; i += 4) {
-            if (imgData.data[i + 3] > 20) {
-                imgData.data[i] = 241;     // R
-                imgData.data[i + 1] = 196; // G
-                imgData.data[i + 2] = 15;  // B
-            }
-        }
-        tCtx.putImageData(imgData, 0, 0);
-        G.flagShapeImg = tempCanvas;
-    }
-
-    function printStory(msg) {
-        textEl.innerText = ""; let idx = 0;
-        function type() {
-            if(idx < msg.length) { textEl.innerText += msg.charAt(idx); idx++; setTimeout(type, 20); }
-        }
-        type();
-    }
-    const textEl = document.getElementById('narrative-text');
-
-    // --- 1. 边界限位拖拽缩放引擎 ---
-    function enforceLimit() {
-        if (G.zoom <= 1) { G.zoom = 1; G.offsetX = 0; G.offsetY = 0; return; }
-        const minX = 910 - (910 * G.zoom);
-        const minY = 365 - (365 * G.zoom);
-        if (G.offsetX > 0) G.offsetX = 0;
-        if (G.offsetY > 0) G.offsetY = 0;
-        if (G.offsetX < minX) G.offsetX = minX;
-        if (G.offsetY < minY) G.offsetY = minY;
-    }
-
-    viewport.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        let nextZoom = G.zoom * (e.deltaY < 0 ? 1.15 : 1/1.15);
-        nextZoom = Math.max(1, Math.min(4, nextZoom));
-        const r = viewport.getBoundingClientRect();
-        const mX = e.clientX - r.left; const mY = e.clientY - r.top;
-        G.offsetX = mX - (mX - G.offsetX) * (nextZoom / G.zoom);
-        G.offsetY = mY - (mY - G.offsetY) * (nextZoom / G.zoom);
-        G.zoom = nextZoom;
-        enforceLimit();
-        canvas.style.transform = `translate(${G.offsetX}px, ${G.offsetY}px) scale(${G.zoom})`;
+    // 1. 弹窗打开与关闭
+    hotspot.addEventListener('click', () => {
+        dialog.style.display = 'block';
+    });
+    closeDialog.addEventListener('click', () => {
+        dialog.style.display = 'none';
     });
 
-    viewport.addEventListener('mousedown', (e) => {
-        if(G.zoom <= 1) return;
-        G.isDragging = true;
-        G.startX = e.clientX - G.offsetX; G.startY = e.clientY - G.offsetY;
-    });
-    window.addEventListener('mousemove', (e) => {
-        if (!G.isDragging) return;
-        G.offsetX = e.clientX - G.startX; G.offsetY = e.clientY - G.startY;
-        enforceLimit();
-        canvas.style.transform = `translate(${G.offsetX}px, ${G.offsetY}px) scale(${G.zoom})`;
-    });
-    window.addEventListener('mouseup', () => G.isDragging = false);
-
-    // --- 2. 物品形状悬停与热区检测 ---
-    canvas.addEventListener('mousemove', (e) => {
-        if(G.stage !== 1) return;
-        const rect = canvas.getBoundingClientRect();
-        const cx = (e.clientX - rect.left) / G.zoom;
-        const cy = (e.clientY - rect.top) / G.zoom;
-        G.mouseInPole = (cx >= POLE_BOX.x && cx <= POLE_BOX.x + POLE_BOX.w &&
-                         cy >= POLE_BOX.y && cy <= POLE_BOX.y + POLE_BOX.h);
-    });
-
-    canvas.addEventListener('click', (e) => {
-        if(G.stage !== 1) return;
-        const rect = canvas.getBoundingClientRect();
-        const cx = (e.clientX - rect.left) / G.zoom;
-        const cy = (e.clientY - rect.top) / G.zoom;
-
-        if(cx >= POLE_BOX.x && cx <= POLE_BOX.x + POLE_BOX.w &&
-           cy >= POLE_BOX.y && cy <= POLE_BOX.y + POLE_BOX.h) {
-            G.zoom = 1; G.offsetX = 0; G.offsetY = 0;
-            canvas.style.transform = `translate(0px, 0px) scale(1)`;
-            G.mouseInPole = false;
-            document.getElementById('paint-overlay').classList.add('active');
-        }
-    });
-
-    // --- 3. 16x16 高精手绘交互面板逻辑 ---
-    const pCanvas = document.getElementById('paint-canvas');
-    const pCtx = pCanvas.getContext('2d');
-    pCtx.clearRect(0,0,16,16); // 保持完全清空透明，以便无缝注入
-
-    pCanvas.addEventListener('mousedown', () => G.isDrawing = true);
-    window.addEventListener('mouseup', () => G.isDrawing = false);
-    pCanvas.addEventListener('mousemove', (e) => {
-        if(!G.isDrawing) return;
-        const r = pCanvas.getBoundingClientRect();
-        const px = Math.floor((e.clientX - r.left) / r.width * 16);
-        const py = Math.floor((e.clientY - r.top) / r.height * 16);
-        
-        if(G.brushColor === 'transparent') {
-            pCtx.clearRect(px, py, 1, 1);
-        } else {
-            pCtx.fillStyle = G.brushColor;
-            pCtx.fillRect(px, py, 1, 1);
-        }
-    });
-
-    document.querySelectorAll('.color-cube').forEach(cube => {
-        cube.addEventListener('click', (e) => {
-            document.querySelector('.color-cube.active').classList.remove('active');
-            let target = e.target.classList.contains('color-cube') ? e.target : e.target.parentElement;
-            target.classList.add('active');
-            G.brushColor = target.dataset.color;
+    // 2. 调色盘与工具切换
+    colorPickers.forEach(picker => {
+        picker.addEventListener('click', (e) => {
+            isEraser = false;
+            eraserBtn.classList.remove('active');
+            colorPickers.forEach(p => p.classList.remove('active'));
+            
+            e.target.classList.add('active');
+            currentColor = e.target.getAttribute('data-color');
         });
     });
-    document.getElementById('btn-clear').addEventListener('click', () => pCtx.clearRect(0,0,16,16));
-    document.getElementById('paint-close-x').addEventListener('click', () => {
-        document.getElementById('paint-overlay').classList.remove('active');
+
+    eraserBtn.addEventListener('click', () => {
+        isEraser = true;
+        colorPickers.forEach(p => p.classList.remove('active'));
+        eraserBtn.classList.add('active');
     });
 
-    // --- 4. 点击注入触发视频动效还原（高燃大冲锋） ---
-    document.getElementById('btn-submit').addEventListener('click', () => {
-        document.getElementById('paint-overlay').classList.remove('active');
-        G.stage = 2;
-        printStory("红旗已就绪！漫山遍野的红军战士发出胜利的呐喊，全速向山顶高地发起大冲锋！");
+    // 3. 鼠标手绘逻辑
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    }
 
-        // 从画面两侧（原视频中红军所在位置）生成奔跑汇聚的粒子群
-        for(let n=0; n<60; n++){
-            // 左翼跑向中央
-            G.soldiers.push({ x: Math.random()*120, y: 280+Math.random()*40, tx: 494, ty: 220, spd: Math.random()*2+2 });
-            // 右翼跑向中央
-            G.soldiers.push({ x: 790+Math.random()*120, y: 280+Math.random()*40, tx: 494, ty: 220, spd: Math.random()*2+2 });
-        }
+    canvas.addEventListener('mousedown', (e) => {
+        isPainting = true;
+        const pos = getMousePos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
     });
 
-    // 背景平滑大渐变过渡器
-    function startSceneBlend() {
-        let startTime = Date.now();
-        function transition() {
-            let elapsed = Date.now() - startTime;
-            G.bgFade = Math.min(elapsed / 1800, 1);
-            if(G.bgFade < 1) {
-                requestAnimationFrame(transition);
-            } else {
-                G.stage = 3;
-                document.getElementById('top-progressbar').style.width = '100%';
-                printStory("一九Mz六年十月，红军三大主力在甘肃会宁胜利会师！\n红旗迎风招展，全军起立欢呼，长征写下最辉煌的终章！");
-                setTimeout(() => { document.getElementById('medal-overlay').classList.add('active'); }, 1800);
-            }
-        }
-        transition();
-    }
-
-    // 正弦波形变风摆旗帜计算核心
-    function drawWavingFlag(cx, cy, targetW, targetH) {
-        G.wavePhase += 0.22;
-        const amplitude = 3.5;
-        for (let x = 0; x < targetW; x++) {
-            // 正弦波从旗杆套向旗面边缘产生振幅放大的递增动效
-            const waveY = Math.sin(x * 0.2 + G.wavePhase) * amplitude * (x / targetW);
-            ctx.drawImage(pCanvas, Math.floor((x / targetW)*16), 0, 1, 16, cx + x, cy + waveY, 1, targetH);
-        }
-    }
-
-    // --- 5. 游戏全自动化主循环控制系统 ---
-    function runLoop() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // A. 基础图层驱动与演变切换
-        if(G.stage <= 2) {
-            if(bg1.complete) ctx.drawImage(bg1, 0, 0, canvas.width, canvas.height);
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isPainting) return;
+        const pos = getMousePos(e);
+        
+        if (isEraser) {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 16; 
         } else {
-            if(bg2.complete) ctx.drawImage(bg2, 0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = brushSize;
         }
+        
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    });
 
-        // B. 大转场无缝混合双图层（视频切换特效）
-        if(G.stage === 2.5) {
-            if(bg2.complete) ctx.drawImage(bg2, 0, 0, canvas.width, canvas.height);
-            ctx.save();
-            ctx.globalAlpha = 1.0 - G.bgFade;
-            if(bg1.complete) ctx.drawImage(bg1, 0, 0, canvas.width, canvas.height);
-            ctx.restore();
-        }
+    window.addEventListener('mouseup', () => {
+        isPainting = false;
+    });
 
-        // C. 绘制精准“物品形状”的悬停半透明闪烁轮廓
-        if(G.stage === 1 && G.mouseInPole && G.flagShapeImg) {
-            ctx.save();
-            // 产生平滑的像素呼吸闪烁光晕效果
-            ctx.globalAlpha = 0.4 + Math.sin(Date.now() * 0.007) * 0.25;
-            // 将轮廓精准放置在高地插旗点位置上（宽度 80px，高度 80px）
-            ctx.drawImage(G.flagShapeImg, 452, 110, 80, 80);
-            ctx.restore();
-        }
+    // 清空画布
+    clearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
 
-        // D. 战士粒子向中央山顶会师冲锋计算
-        if(G.stage === 2) {
-            let activeCount = 0;
-            for(let i=0; i<G.soldiers.length; i++) {
-                let s = G.soldiers[i];
-                let dx = s.tx - s.x; let dy = s.ty - s.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                if(dist > 5) {
-                    s.x += (dx / dist) * s.spd; s.y += (dy / dist) * s.spd;
-                    // 绘制像素战士移动影子小点
-                    ctx.fillStyle = "#2c3e50";
-                    ctx.fillRect(Math.floor(s.x), Math.floor(s.y), 3, 4);
-                    activeCount++;
+    // 4. 几何形状判定算法（松散检测）
+    function checkGeometry() {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        
+        let leftQuadrantPixels = 0;  // 左半边（对应参考图旗杆长方形区域）
+        let rightQuadrantPixels = 0; // 右上边（对应参考图旗面三角形/长方形区域）
+        let totalPainted = 0;
+
+        // 遍历画布像素点
+        for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+                const idx = (y * canvas.width + x) * 4;
+                const alpha = imgData[idx + 3]; // 获取透明度通道
+
+                if (alpha > 50) { // 如果该点被上色了
+                    totalPainted++;
+                    if (x < canvas.width * 0.35) {
+                        leftQuadrantPixels++; // 判定为立柱长条区域
+                    }
+                    if (x >= canvas.width * 0.35 && y < canvas.height * 0.65) {
+                        rightQuadrantPixels++; // 判定为右上彩旗区域
+                    }
                 }
             }
-            // 所有战士全部冲锋到达山顶，瞬间开启转场升旗
-            if(activeCount === 0) { G.stage = 2.5; startSceneBlend(); }
         }
 
-        // E. 玩家手绘成果注入并赋予风动摇摆动能
-        if(G.stage >= 2.5) {
-            ctx.save();
-            // 精准对接视频中山顶上那面红旗的相对坐标系与大小（52px, 52px）
-            drawWavingFlag(495, 114, 52, 52);
-            ctx.restore();
+        // 简易阈值判定：总涂抹面积不能太少，且两边都有落笔（证明既画了杆，又画了面）
+        if (totalPainted > 800 && leftQuadrantPixels > 150 && rightQuadrantPixels > 400) {
+            return true;
         }
-
-        requestAnimationFrame(runLoop);
+        return false;
     }
 
-    document.getElementById('btn-reload').addEventListener('click', () => location.reload());
-    
-    // 启动游戏引擎
-    requestAnimationFrame(runLoop);
+    // 5. 注入场景（通关逻辑）
+    submitBtn.addEventListener('click', () => {
+        if (checkGeometry()) {
+            // 判定通过
+            dialog.style.display = 'none';
+            hotspot.style.display = 'none'; // 隐藏热区
+            
+            // 播放视频
+            video.style.display = 'block';
+            video.play();
+        } else {
+            // 判定失败提示
+            alert("高台之上的红旗还不够完整，请参考左侧图像，画出挺拔的旗杆与飘扬的旗面吧！");
+        }
+    });
+
+    // 6. 视频播放完毕停留在最后一帧，并弹出通关按钮
+    video.addEventListener('ended', () => {
+        video.pause(); // 停在最后一帧
+        victoryBtn.style.display = 'block'; // 弹出像素风格成功按钮
+    });
+
+    // 点击通关成功按钮的后续交互
+    victoryBtn.addEventListener('click', () => {
+        alert("长征胜利宣告圆满落幕！即将进入下一关卡...");
+        // 这里可以执行切换关卡、跳转页面或重置游戏的逻辑
+    });
 </script>
+
 </body>
 </html>
