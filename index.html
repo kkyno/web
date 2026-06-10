@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>长征绘途 - 序幕：瑞金出发</title>
+    <title>长征绘途 - 终章：会宁红旗 (高保真交互版)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,35 +13,83 @@
         }
 
         body {
-            background-color: #0b0b0f;
+            background-color: #0d0d11;
             color: #e2dcd0;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Courier New', Courier, "SimHei", monospace;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             overflow: hidden;
         }
 
+        /* 🔴 完美的复古红框系统外壳（像素风格） */
         #game-wrapper {
             position: relative;
-            width: 960px;
-            height: 540px;
-            border: 6px solid #2d2d38;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.9);
-            background-color: #101014;
-            display: flex;
-            flex-direction: column;
+            width: 1000px;
+            height: 630px;
+            background-color: #2b1611;
+            border: 6px solid #1a0b08;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
             overflow: hidden;
         }
 
-        #viewport {
-            position: relative;
+        /* 顶部功能栏（带复古元素） */
+        #top-header-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 420px;
+            height: 50px;
+            background-color: #4a1f17;
+            border-bottom: 4px solid #1a0b08;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        #progress-container {
+            width: 120px;
+            height: 16px;
+            background-color: #1a0b08;
+            border: 2px solid #8e3221;
+            padding: 2px;
+        }
+        #top-progressbar {
+            width: 90%; /* 会师前夕 90% */
+            height: 100%;
+            background-color: #de2910;
+            transition: width 1.5s cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+
+        #top-decorations {
+            margin-left: 20px;
+            color: #8e3221;
+            font-size: 18px;
+            letter-spacing: 5px;
+        }
+
+        #window-close-icon {
+            position: absolute;
+            right: 20px;
+            top: 12px;
+            color: #8e3221;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid #8e3221;
+            padding: 0 6px;
+        }
+
+        /* 中央视窗（完美承载 Canvas 核心画面） */
+        #viewport {
+            position: absolute;
+            top: 80px;
+            left: 45px;
+            width: 910px;
+            height: 365px;
             overflow: hidden;
-            background-color: #0d0d11;
+            background-color: #000;
+            border: 4px solid #1a0b08;
             cursor: grab;
         }
         #viewport:active { cursor: grabbing; }
@@ -51,45 +99,30 @@
             top: 0;
             left: 0;
             transform-origin: 0 0;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-crisp-edges;
             image-rendering: pixelated;
-            image-rendering: crisp-edges;
         }
 
-        #narrative-bar {
-            flex: 1;
-            background-color: #161622;
-            border-top: 4px solid #2d2d38;
+        /* 底部灰色文本长条叙事区 */
+        #narrative-text {
+            position: absolute;
+            bottom: 35px;
+            left: 45px;
+            width: 910px;
+            height: 120px;
+            background-color: #484541;
+            border: 4px solid #1a0b08;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
             padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #dialogue-text {
-            font-size: 15px;
+            font-size: 16px;
             line-height: 1.6;
-            color: #c2b9a7;
-            max-width: 75%;
-            white-space: pre-line;
-        }
-
-        .pixel-btn {
-            background-color: #a33835;
-            color: #fff;
-            border: none;
-            padding: 12px 24px;
-            font-family: inherit;
-            font-size: 14px;
+            color: #f3f1ed;
+            font-family: "SimSun", "宋体", serif;
             font-weight: bold;
-            cursor: pointer;
-            box-shadow: -3px 0 0 #5a1e1c, 3px 0 0 #5a1e1c, 0 -3px 0 #5a1e1c, 0 3px 0 #5a1e1c;
-            transition: background 0.1s;
+            white-space: pre-line;
+            pointer-events: none;
         }
-        .pixel-btn:hover { background-color: #bc4340; }
-        .pixel-btn:active { transform: translate(1px, 1px); }
 
+        /* 全局遮罩层 */
         .overlay {
             position: absolute;
             top: 0;
@@ -103,62 +136,91 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
-            z-index: 10;
+            z-index: 99;
         }
         .overlay.active {
             opacity: 1;
             pointer-events: auto;
         }
 
-        .pixel-modal {
-            background-color: #22222e;
-            border: 4px solid #4d4d66;
-            padding: 24px;
-            width: 450px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        /* 🟫 高精对齐像素红框「作战地图」绘制面板 */
+        #paint-panel {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            background-color: #5c3427;
+            border: 6px solid #de2910;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
+            padding: 20px;
         }
 
-        .modal-title {
-            color: #e6a15c;
-            font-size: 16px;
+        #paint-title {
+            color: #ffffff;
+            font-size: 24px;
             font-weight: bold;
+            font-family: "SimHei", sans-serif;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        #paint-close-x {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .workbench-flex {
+            display: flex;
+            gap: 40px;
             margin-bottom: 15px;
-            letter-spacing: 1px;
         }
 
-        .modal-desc {
+        .window-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .window-label {
             font-size: 14px;
-            color: #c2b9a7;
-            line-height: 1.5;
-            margin-top: 15px;
-            text-align: center;
+            color: #f3f1ed;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 0px #000;
         }
 
-        .object-preview-slot {
-            width: 120px;
-            height: 120px;
-            border: 2px dashed #4d4d66;
-            background-color: #181824;
+        /* 带有网格底纹的画布容器 */
+        .grid-canvas-container {
+            width: 220px;
+            height: 220px;
+            background-color: #2c1611;
+            border: 4px solid #1a0b08;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 13.75px 13.75px; /* 精准契合 16x16 缩放网格 */
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .object-preview-slot img {
-            max-width: 100%;
-            max-height: 100%;
-            image-rendering: pixelated;
+            position: relative;
+            overflow: hidden;
         }
 
-        .paint-box {
-            width: 192px;
-            height: 192px;
-            border: 4px solid #e6a15c;
-            background-color: #14141a;
+        #ref-image-view {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            object-fit: contain;
         }
+
         #paint-canvas {
             width: 100%;
             height: 100%;
@@ -166,350 +228,421 @@
             image-rendering: pixelated;
         }
 
-        .palette {
+        /* 🎨 7色高保真像素色块调色盘 */
+        .palette-container {
             display: flex;
             gap: 10px;
-            margin: 15px 0;
-        }
-        .color-dot {
-            width: 28px;
-            height: 28px;
-            border: 2px solid #3a3a4a;
-            cursor: pointer;
+            margin-bottom: 20px;
+            background: #1a0b08;
+            padding: 6px 12px;
             border-radius: 4px;
         }
-        .color-dot.active {
-            border-color: #fff;
-            transform: scale(1.1);
+        .color-cube {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #000;
+            cursor: pointer;
+            box-shadow: 1px 1px 0px rgba(255,255,255,0.1);
+        }
+        .color-cube.active {
+            border-color: #ffffff;
+            transform: scale(1.15);
+            box-shadow: 0 0 8px #fff;
         }
 
-        .close-x {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            color: #8a8a9a;
-            cursor: pointer;
-            font-size: 18px;
+        /* 底部像素功能按钮 */
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            padding: 0 10px;
         }
-        .close-x:hover { color: #fff; }
+
+        .pixel-btn {
+            flex: 1;
+            height: 46px;
+            font-family: 'SimHei', sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: -3px 0 0 #1a0b08, 3px 0 0 #1a0b08, 0 -3px 0 #1a0b08, 0 3px 0 #1a0b08;
+            text-shadow: 1px 1px 0px #000;
+        }
+        #btn-clear { background-color: #555555; }
+        #btn-clear:hover { background-color: #666666; }
+        #btn-submit { background-color: #de2910; }
+        #btn-submit:hover { background-color: #e5432d; }
+
+        /* 终章勋章弹窗 */
+        .medal-modal {
+            background-color: #2b1611;
+            border: 4px solid #f1c40f;
+            padding: 30px;
+            text-align: center;
+            width: 420px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        }
+        .medal-badge {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #f39c12 0%, #d35400 100%);
+            border: 4px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 15px auto;
+            animation: flip 4s linear infinite;
+        }
+        @keyframes flip { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
     </style>
 </head>
 <body>
 
     <div id="game-wrapper">
+        <div id="top-header-bar">
+            <div id="progress-container">
+                <div id="top-progressbar"></div>
+            </div>
+            <div id="top-decorations">▰▰▰ ◆ ▰▰▰</div>
+            <div id="window-close-icon">×</div>
+        </div>
+
         <div id="viewport">
-            <canvas id="main-canvas" width="960" height="540"></canvas>
+            <canvas id="main-canvas" width="910" height="365"></canvas>
         </div>
 
-        <div id="narrative-bar">
-            <div id="dialogue-text">正在唤醒瑞金指挥部记忆...</div>
-            <button class="pixel-btn" id="next-stage-btn" style="display: none; background-color: #437a43; box-shadow: -3px 0 0 #234723, 3px 0 0 #234723, 0 -3px 0 #234723, 0 3px 0 #234723;">开启长征</button>
-        </div>
+        <div id="narrative-text">正在启动瑞金终极指挥控制端...</div>
 
-        <div class="overlay" id="inspect-overlay">
-            <div class="pixel-modal">
-                <span class="close-x" id="inspect-close">×</span>
-                <div class="modal-title" id="inspect-title">物件名称</div>
-                <div class="object-preview-slot">
-                    <img id="inspect-img" src="" alt="🔍">
+        <div class="overlay" id="paint-overlay">
+            <div id="paint-panel">
+                <span id="paint-close-x">×</span>
+                <div id="paint-title">绘制「会宁红旗」</div>
+                
+                <div class="workbench-flex">
+                    <div class="window-box">
+                        <div class="window-label">历史线索 / 参考</div>
+                        <div class="grid-canvas-container">
+                            <img id="ref-image-view" src="./06_红旗.png" alt="参考红旗">
+                        </div>
+                    </div>
+
+                    <div class="window-box">
+                        <div class="window-label">手绘交互层 (16x16)</div>
+                        <div class="grid-canvas-container" style="border-color: #f39c12;">
+                            <canvas id="paint-canvas" width="16" height="16"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-desc" id="inspect-desc">物件详细描述...</div>
+
+                <div class="palette-container">
+                    <div class="color-cube" style="background-color: #de2910;" data-color="#de2910" title="革命红"></div>
+                    <div class="color-cube" style="background-color: #9e1c0d;" data-color="#9e1c0d" title="暗部红"></div>
+                    <div class="color-cube active" style="background-color: #ffde00;" data-color="#ffde00" title="五星黄"></div>
+                    <div class="color-cube" style="background-color: #7a431d;" data-color="#7a431d" title="木杆棕"></div>
+                    <div class="color-cube" style="background-color: #ffffff;" data-color="#ffffff" title="高光白"></div>
+                    <div class="color-cube" style="background-color: #1a0b08;" data-color="#1a0b08" title="线条黑"></div>
+                    <div class="color-cube" style="background-color: transparent; border: 2px dashed #ff4757;" data-color="transparent" title="擦除"></div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="pixel-btn" id="btn-clear">清空画布</button>
+                    <button class="pixel-btn" id="btn-submit">注入场景</button>
+                </div>
             </div>
         </div>
 
-        <div class="overlay" id="paint-overlay">
-            <div class="pixel-modal" style="width: 320px;">
-                <span class="close-x" id="paint-close">×</span>
-                <div class="modal-title">【手绘：煤油灯芯】</div>
-                <div class="paint-box">
-                    <canvas id="paint-canvas" width="64" height="64"></canvas>
-                </div>
-                <div class="palette">
-                    <div class="color-dot active" style="background-color: #ffcc4d;" data-color="#ffcc4d"></div>
-                    <div class="color-dot" style="background-color: #e67e22;" data-color="#e67e22"></div>
-                    <div class="color-dot" style="background-color: #ffffff;" data-color="#ffffff"></div>
-                </div>
-                <div style="display: flex; gap: 15px; width: 100%;">
-                    <button class="pixel-btn" id="paint-clear" style="flex:1; background-color:#555; box-shadow:-3px 0 0 #333, 3px 0 0 #333, 0 -3px 0 #333, 0 3px 0 #333;">擦除</button>
-                    <button class="pixel-btn" id="paint-submit" style="flex:1;">注入灯芯</button>
-                </div>
+        <div class="overlay" id="medal-overlay">
+            <div class="medal-modal">
+                <h2 style="color:#f1c40f; letter-spacing:2px; font-size:22px; font-family:'SimHei';">★ 宣告长征胜利结束 ★</h2>
+                <div class="medal-badge">🎖️</div>
+                <p style="color:#f3f1ed; font-size:14px; line-height:1.8; text-align:left; font-family:'宋体'; margin-top:10px;">
+                    大部队已在会宁胜利会师！你亲手精心描绘的凯旋红旗已经立在会宁的高岗上，迎着朝阳与晚霞猎猎飘扬！<br><br>
+                    <strong>三军胜利会师，长征精神永放光芒！</strong>
+                </p>
+                <button class="pixel-btn" id="btn-reload" style="background-color:#f39c12; margin-top:20px; width:100%;">重新开启征途</button>
             </div>
         </div>
     </div>
 
 <script>
-    // 更改为英文命名，规避浏览器对中文路径转码导致的 404 错误
-    const IMG_LIGHT_PATH = './light.jpg'; 
-    const IMG_DARK_PATH  = './dark.jpg'; 
+    // 🗄️ 原生素材与状态配置
+    const IMG_BG_BEFORE = './7.jpg';       // 图一：立旗前
+    const IMG_BG_AFTER  = './背景7.jpg';   // 图二：立旗后
+    const IMG_REF_FLAG  = './06_红旗.png';   // 官方红旗
 
-    const HITBOXES = {
-        map:       { x: 30,  y: 100, w: 120, h: 120, name: "墙上的军用地图", desc: "地图上画着苏区周围错综复杂的山道。由于煤油灯燃尽，黑夜里大部队的撤退路线已经完全看不清了……" },
-        telescope: { x: 460, y: 310, w: 50,  h: 40,  name: "蔡司双筒望远镜", desc: "镜身漆皮有些磨损。通过它，军长曾看清过无数次敌人的前哨碉堡与围剿铁丝网。" },
-        stove:     { x: 720, y: 260, w: 160, h: 260, name: "正燃烧的铁皮炉", desc: "炉火正旺，发出微弱的哔啵声。这或许是长征出发前，全指挥部里唯一能提供温度的地方了。" },
-        lamp:      { x: 570, y: 300, w: 40,  h: 60,  name: "煤油灯", desc: "灯芯烧秃了，警卫员正焦急地看着你。" }
-    };
+    // 旗杆位置精确定位热区（契合高坡山顶）
+    const POLE_BOX = { x: 440, y: 110, w: 60, h: 140 };
 
     const G = {
         zoom: 1, offsetX: 0, offsetY: 0,
         isDragging: false, startX: 0, startY: 0,
-        stage: 0, darkAlpha: 0,
-        particles: [], isDrawing: false, brushColor: '#ffcc4d'
+        stage: 1, // 1:悬停寻找 2:战士冲锋 2.5:底图平滑大渐变 3:欢庆胜利
+        bgFade: 0,
+        mouseInPole: false,
+        soldiers: [],
+        isDrawing: false, brushColor: '#ffde00',
+        wavePhase: 0,
+        flagShapeImg: null, // 用于动态提取旗帜轮廓
+        loadedCount: 0
     };
 
     const canvas = document.getElementById('main-canvas');
     const ctx = canvas.getContext('2d');
     const viewport = document.getElementById('viewport');
 
-    const imgLight = new Image(); imgLight.src = IMG_LIGHT_PATH;
-    const imgDark  = new Image(); imgDark.src = IMG_DARK_PATH;
+    // 核心静态资源平滑装载
+    const bg1 = new Image(); bg1.src = IMG_BG_BEFORE;
+    const bg2 = new Image(); bg2.src = IMG_BG_AFTER;
+    const refFlag = new Image(); refFlag.src = IMG_REF_FLAG;
 
-    // 容错机制：无论图片是否成功加载，页面打开 500ms 后强制启动游戏交互
-    let gameStarted = false;
-    function tryStartGame() {
-        if (gameStarted) return;
-        gameStarted = true;
-        initGame();
+    function checkAssets() {
+        G.loadedCount++;
+        if(G.loadedCount === 3) {
+            // 提取红旗素材轮廓，用于完美生成“物品形状”的黄色悬停虚线
+            createFlagShapeSilhouette();
+            printStory("会宁高地环境装载就绪。\n[线索：请在中央高坡山顶寻找插旗点立起红旗]");
+        }
+    }
+    bg1.onload = checkAssets;
+    bg2.onload = checkAssets;
+    refFlag.onload = checkAssets;
+
+    // 动态生成半透明黄色物品形状轮廓函数
+    function createFlagShapeSilhouette() {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = refFlag.width; tempCanvas.height = refFlag.height;
+        const tCtx = tempCanvas.getContext('2d');
+        tCtx.drawImage(refFlag, 0, 0);
+        const imgData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        // 将所有非透明像素染成明亮的金黄色
+        for (let i = 0; i < imgData.data.length; i += 4) {
+            if (imgData.data[i + 3] > 20) {
+                imgData.data[i] = 241;     // R
+                imgData.data[i + 1] = 196; // G
+                imgData.data[i + 2] = 15;  // B
+            }
+        }
+        tCtx.putImageData(imgData, 0, 0);
+        G.flagShapeImg = tempCanvas;
     }
 
-    imgLight.onload = () => { if(imgDark.complete) tryStartGame(); };
-    imgDark.onload  = () => { if(imgLight.complete) tryStartGame(); };
-    setTimeout(tryStartGame, 500); // 兜底防止因为404导致代码死锁
-
-    const dialogueEl = document.getElementById('dialogue-text');
-    function triggerDialogue(text) {
-        dialogueEl.innerText = "";
-        let i = 0;
+    function printStory(msg) {
+        textEl.innerText = ""; let idx = 0;
         function type() {
-            if(i < text.length) {
-                dialogueEl.innerText += text.charAt(i);
-                i++;
-                setTimeout(type, 30);
-            }
+            if(idx < msg.length) { textEl.innerText += msg.charAt(idx); idx++; setTimeout(type, 20); }
         }
         type();
     }
+    const textEl = document.getElementById('narrative-text');
 
-    function initGame() {
-        triggerDialogue("1934年深秋，江西瑞金。你在一间老旧的指挥部里醒来，桌上摊开一张泛黄的军用地图...");
-        
-        let startTime = Date.now();
-        function transitionToDark() {
-            let elapsed = Date.now() - startTime;
-            G.darkAlpha = Math.min(elapsed / 2500, 1);
-            
-            if(G.darkAlpha < 1) {
-                requestAnimationFrame(transitionToDark);
-            } else {
-                G.stage = 1; 
-                triggerDialogue("年轻的警卫员匆匆走来，把一盏油灯推向你：“同志，灯芯燃尽了……看不清地图，后面的战略转移路线就全错了！” \n【系统提示：使用鼠标滚轮可定点放大场景；请在画面中寻找并点击“煤油灯”】");
-            }
-        }
-        setTimeout(transitionToDark, 2000);
-        drawLoop();
+    // --- 1. 边界限位拖拽缩放引擎 ---
+    function enforceLimit() {
+        if (G.zoom <= 1) { G.zoom = 1; G.offsetX = 0; G.offsetY = 0; return; }
+        const minX = 910 - (910 * G.zoom);
+        const minY = 365 - (365 * G.zoom);
+        if (G.offsetX > 0) G.offsetX = 0;
+        if (G.offsetY > 0) G.offsetY = 0;
+        if (G.offsetX < minX) G.offsetX = minX;
+        if (G.offsetY < minY) G.offsetY = minY;
     }
 
-    // 1-B 定点滚轮缩放
     viewport.addEventListener('wheel', (e) => {
         e.preventDefault();
-        const zoomFactor = 1.15;
-        let nextZoom = G.zoom;
-        
-        if(e.deltaY < 0) nextZoom *= zoomFactor;
-        else nextZoom /= zoomFactor;
-        
+        let nextZoom = G.zoom * (e.deltaY < 0 ? 1.15 : 1/1.15);
         nextZoom = Math.max(1, Math.min(4, nextZoom));
-
-        const rect = viewport.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        G.offsetX = mouseX - (mouseX - G.offsetX) * (nextZoom / G.zoom);
-        G.offsetY = mouseY - (mouseY - G.offsetY) * (nextZoom / G.zoom);
+        const r = viewport.getBoundingClientRect();
+        const mX = e.clientX - r.left; const mY = e.clientY - r.top;
+        G.offsetX = mX - (mX - G.offsetX) * (nextZoom / G.zoom);
+        G.offsetY = mY - (mY - G.offsetY) * (nextZoom / G.zoom);
         G.zoom = nextZoom;
-
-        if(G.zoom === 1) { G.offsetX = 0; G.offsetY = 0; }
-        updateCanvasTransform();
+        enforceLimit();
+        canvas.style.transform = `translate(${G.offsetX}px, ${G.offsetY}px) scale(${G.zoom})`;
     });
 
     viewport.addEventListener('mousedown', (e) => {
-        if (e.target !== viewport && e.target !== canvas) return;
-        if (G.zoom === 1) return;
+        if(G.zoom <= 1) return;
         G.isDragging = true;
-        G.startX = e.clientX - G.offsetX;
-        G.startY = e.clientY - G.offsetY;
+        G.startX = e.clientX - G.offsetX; G.startY = e.clientY - G.offsetY;
     });
-
     window.addEventListener('mousemove', (e) => {
         if (!G.isDragging) return;
-        G.offsetX = e.clientX - G.startX;
-        G.offsetY = e.clientY - G.startY;
-        updateCanvasTransform();
+        G.offsetX = e.clientX - G.startX; G.offsetY = e.clientY - G.startY;
+        enforceLimit();
+        canvas.style.transform = `translate(${G.offsetX}px, ${G.offsetY}px) scale(${G.zoom})`;
     });
     window.addEventListener('mouseup', () => G.isDragging = false);
 
-    function updateCanvasTransform() {
-        canvas.style.transform = `translate(${G.offsetX}px, ${G.offsetY}px) scale(${G.zoom})`;
-    }
-
-    // 3-A 热区点击碰撞 + 2-B 镜头自动复位
-    canvas.addEventListener('click', (e) => {
-        if(G.stage !== 1) return; 
-
+    // --- 2. 物品形状悬停与热区检测 ---
+    canvas.addEventListener('mousemove', (e) => {
+        if(G.stage !== 1) return;
         const rect = canvas.getBoundingClientRect();
-        const clickX = (e.clientX - rect.left) / G.zoom;
-        const clickY = (e.clientY - rect.top) / G.zoom;
+        const cx = (e.clientX - rect.left) / G.zoom;
+        const cy = (e.clientY - rect.top) / G.zoom;
+        G.mouseInPole = (cx >= POLE_BOX.x && cx <= POLE_BOX.x + POLE_BOX.w &&
+                         cy >= POLE_BOX.y && cy <= POLE_BOX.y + POLE_BOX.h);
+    });
 
-        for(let key in HITBOXES) {
-            let box = HITBOXES[key];
-            if(clickX >= box.x && clickX <= box.x + box.w && clickY >= box.y && clickY <= box.y + box.h) {
-                
-                // 2-B 自动复位
-                G.zoom = 1; G.offsetX = 0; G.offsetY = 0;
-                updateCanvasTransform();
+    canvas.addEventListener('click', (e) => {
+        if(G.stage !== 1) return;
+        const rect = canvas.getBoundingClientRect();
+        const cx = (e.clientX - rect.left) / G.zoom;
+        const cy = (e.clientY - rect.top) / G.zoom;
 
-                if(key === 'lamp') {
-                    document.getElementById('paint-overlay').classList.add('active');
-                } else {
-                    document.getElementById('inspect-title').innerText = box.name;
-                    document.getElementById('inspect-desc').innerText = box.desc;
-                    document.getElementById('inspect-img').src = ""; // 预留接口
-                    document.getElementById('inspect-overlay').classList.add('active');
-                }
-                break;
-            }
+        if(cx >= POLE_BOX.x && cx <= POLE_BOX.x + POLE_BOX.w &&
+           cy >= POLE_BOX.y && cy <= POLE_BOX.y + POLE_BOX.h) {
+            G.zoom = 1; G.offsetX = 0; G.offsetY = 0;
+            canvas.style.transform = `translate(0px, 0px) scale(1)`;
+            G.mouseInPole = false;
+            document.getElementById('paint-overlay').classList.add('active');
         }
     });
 
-    document.getElementById('inspect-close').addEventListener('click', () => {
-        document.getElementById('inspect-overlay').classList.remove('active');
-    });
-
-    // 64x64 像素画布
+    // --- 3. 16x16 高精手绘交互面板逻辑 ---
     const pCanvas = document.getElementById('paint-canvas');
     const pCtx = pCanvas.getContext('2d');
-    pCtx.fillStyle = '#181824'; pCtx.fillRect(0,0,64,64); 
+    pCtx.clearRect(0,0,16,16); // 保持完全清空透明，以便无缝注入
 
     pCanvas.addEventListener('mousedown', () => G.isDrawing = true);
     window.addEventListener('mouseup', () => G.isDrawing = false);
     pCanvas.addEventListener('mousemove', (e) => {
         if(!G.isDrawing) return;
         const r = pCanvas.getBoundingClientRect();
-        const px = Math.floor((e.clientX - r.left) / r.width * 64);
-        const py = Math.floor((e.clientY - r.top) / r.height * 64);
-        pCtx.fillStyle = G.brushColor;
-        pCtx.fillRect(px, py, 2, 2); 
+        const px = Math.floor((e.clientX - r.left) / r.width * 16);
+        const py = Math.floor((e.clientY - r.top) / r.height * 16);
+        
+        if(G.brushColor === 'transparent') {
+            pCtx.clearRect(px, py, 1, 1);
+        } else {
+            pCtx.fillStyle = G.brushColor;
+            pCtx.fillRect(px, py, 1, 1);
+        }
     });
 
-    document.querySelectorAll('.color-dot').forEach(dot => {
-        dot.addEventListener('click', (e) => {
-            document.querySelector('.color-dot.active').classList.remove('active');
-            e.target.classList.add('active');
-            G.brushColor = e.target.dataset.color;
+    document.querySelectorAll('.color-cube').forEach(cube => {
+        cube.addEventListener('click', (e) => {
+            document.querySelector('.color-cube.active').classList.remove('active');
+            let target = e.target.classList.contains('color-cube') ? e.target : e.target.parentElement;
+            target.classList.add('active');
+            G.brushColor = target.dataset.color;
         });
     });
-    document.getElementById('paint-clear').addEventListener('click', () => {
-        pCtx.fillStyle = '#181824'; pCtx.fillRect(0,0,64,64);
-    });
-    document.getElementById('paint-close').addEventListener('click', () => {
+    document.getElementById('btn-clear').addEventListener('click', () => pCtx.clearRect(0,0,16,16));
+    document.getElementById('paint-close-x').addEventListener('click', () => {
         document.getElementById('paint-overlay').classList.remove('active');
     });
 
-    // 4-B 高阶动画融合
-    document.getElementById('paint-submit').addEventListener('click', () => {
+    // --- 4. 点击注入触发视频动效还原（高燃大冲锋） ---
+    document.getElementById('btn-submit').addEventListener('click', () => {
         document.getElementById('paint-overlay').classList.remove('active');
-        G.stage = 2; 
+        G.stage = 2;
+        printStory("红旗已就绪！漫山遍野的红军战士发出胜利的呐喊，全速向山顶高地发起大冲锋！");
 
-        triggerDialogue("随着崭新的灯芯被注入，火光轰然点亮！微弱的像素光芒驱散了漫漫长夜，地图上赫然浮现出了长征的第一步路线：“战略转移·瑞金出发”！");
+        // 从画面两侧（原视频中红军所在位置）生成奔跑汇聚的粒子群
+        for(let n=0; n<60; n++){
+            // 左翼跑向中央
+            G.soldiers.push({ x: Math.random()*120, y: 280+Math.random()*40, tx: 494, ty: 220, spd: Math.random()*2+2 });
+            // 右翼跑向中央
+            G.soldiers.push({ x: 790+Math.random()*120, y: 280+Math.random()*40, tx: 494, ty: 220, spd: Math.random()*2+2 });
+        }
+    });
 
+    // 背景平滑大渐变过渡器
+    function startSceneBlend() {
         let startTime = Date.now();
-        function fadeToLight() {
+        function transition() {
             let elapsed = Date.now() - startTime;
-            G.darkAlpha = 1 - Math.min(elapsed / 2500, 1); 
-            
-            if(G.darkAlpha > 0) {
-                requestAnimationFrame(fadeToLight);
+            G.bgFade = Math.min(elapsed / 1800, 1);
+            if(G.bgFade < 1) {
+                requestAnimationFrame(transition);
             } else {
-                G.stage = 3; 
-                document.getElementById('next-stage-btn').style.display = 'block';
+                G.stage = 3;
+                document.getElementById('top-progressbar').style.width = '100%';
+                printStory("一九Mz六年十月，红军三大主力在甘肃会宁胜利会师！\n红旗迎风招展，全军起立欢呼，长征写下最辉煌的终章！");
+                setTimeout(() => { document.getElementById('medal-overlay').classList.add('active'); }, 1800);
             }
         }
-        fadeToLight();
-    });
+        transition();
+    }
 
-    function createPixelParticle() {
-        if(G.stage >= 2 && Math.random() < 0.2) { 
-            G.particles.push({
-                x: 588 + (Math.random() * 12 - 6), 
-                y: 325,
-                size: Math.random() * 3 + 1,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: -Math.random() * 0.7 - 0.4,
-                alpha: 1,
-                color: Math.random() > 0.4 ? '#ffcc4d' : '#e67e22'
-            });
+    // 正弦波形变风摆旗帜计算核心
+    function drawWavingFlag(cx, cy, targetW, targetH) {
+        G.wavePhase += 0.22;
+        const amplitude = 3.5;
+        for (let x = 0; x < targetW; x++) {
+            // 正弦波从旗杆套向旗面边缘产生振幅放大的递增动效
+            const waveY = Math.sin(x * 0.2 + G.wavePhase) * amplitude * (x / targetW);
+            ctx.drawImage(pCanvas, Math.floor((x / targetW)*16), 0, 1, 16, cx + x, cy + waveY, 1, targetH);
         }
     }
 
-    function drawLoop() {
+    // --- 5. 游戏全自动化主循环控制系统 ---
+    function runLoop() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 如果图片加载失败，绘制带有复古像素色块的兜底画面，保证依然可玩
-        const isLightLoaded = imgLight.complete && imgLight.naturalWidth !== 0;
-        const isDarkLoaded = imgDark.complete && imgDark.naturalWidth !== 0;
-
-        if (G.stage === 0 || G.stage === 1) {
-            if (isDarkLoaded) {
-                ctx.drawImage(imgDark, 0, 0, canvas.width, canvas.height);
-            } else {
-                // 兜底暗色背景
-                ctx.fillStyle = "#181820"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = "#2d2d38"; ctx.fillRect(570, 300, 40, 60); // 简易油灯热区提示
-                ctx.fillStyle = "#fff"; ctx.font = "12px monospace"; ctx.fillText("[图片加载中/请重命名为dark.jpg]", 20, 30);
-            }
+        // A. 基础图层驱动与演变切换
+        if(G.stage <= 2) {
+            if(bg1.complete) ctx.drawImage(bg1, 0, 0, canvas.width, canvas.height);
         } else {
-            if (isLightLoaded) {
-                ctx.drawImage(imgLight, 0, 0, canvas.width, canvas.height);
-            } else {
-                ctx.fillStyle = "#4a3b2c"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-            
-            if(G.stage === 2 && isDarkLoaded) {
-                ctx.globalAlpha = G.darkAlpha;
-                ctx.drawImage(imgDark, 0, 0, canvas.width, canvas.height);
-                ctx.globalAlpha = 1.0;
-            }
-            
-            // 将玩家的手绘融入灯中
-            ctx.drawImage(pCanvas, 582, 320, 16, 16);
-
-            // 4-B 动态光晕
-            const breathe = Math.sin(Date.now() * 0.005) * 6;
-            const gradient = ctx.createRadialGradient(590, 328, 2, 590, 328, 50 + breathe);
-            gradient.addColorStop(0, 'rgba(255, 204, 77, 0.5)');
-            gradient.addColorStop(0.6, 'rgba(230, 126, 34, 0.15)');
-            gradient.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 火星粒子
-            createPixelParticle();
-            for(let i = G.particles.length - 1; i >= 0; i--) {
-                let p = G.particles[i];
-                p.x += p.vx; p.y += p.vy; p.alpha -= 0.015;
-                if(p.alpha <= 0) { G.particles.splice(i, 1); continue; }
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.alpha;
-                ctx.fillRect(Math.floor(p.x), Math.floor(p.y), Math.floor(p.size), Math.floor(p.size));
-            }
-            ctx.globalAlpha = 1.0;
+            if(bg2.complete) ctx.drawImage(bg2, 0, 0, canvas.width, canvas.height);
         }
 
-        requestAnimationFrame(drawLoop);
+        // B. 大转场无缝混合双图层（视频切换特效）
+        if(G.stage === 2.5) {
+            if(bg2.complete) ctx.drawImage(bg2, 0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.globalAlpha = 1.0 - G.bgFade;
+            if(bg1.complete) ctx.drawImage(bg1, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+
+        // C. 绘制精准“物品形状”的悬停半透明闪烁轮廓
+        if(G.stage === 1 && G.mouseInPole && G.flagShapeImg) {
+            ctx.save();
+            // 产生平滑的像素呼吸闪烁光晕效果
+            ctx.globalAlpha = 0.4 + Math.sin(Date.now() * 0.007) * 0.25;
+            // 将轮廓精准放置在高地插旗点位置上（宽度 80px，高度 80px）
+            ctx.drawImage(G.flagShapeImg, 452, 110, 80, 80);
+            ctx.restore();
+        }
+
+        // D. 战士粒子向中央山顶会师冲锋计算
+        if(G.stage === 2) {
+            let activeCount = 0;
+            for(let i=0; i<G.soldiers.length; i++) {
+                let s = G.soldiers[i];
+                let dx = s.tx - s.x; let dy = s.ty - s.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist > 5) {
+                    s.x += (dx / dist) * s.spd; s.y += (dy / dist) * s.spd;
+                    // 绘制像素战士移动影子小点
+                    ctx.fillStyle = "#2c3e50";
+                    ctx.fillRect(Math.floor(s.x), Math.floor(s.y), 3, 4);
+                    activeCount++;
+                }
+            }
+            // 所有战士全部冲锋到达山顶，瞬间开启转场升旗
+            if(activeCount === 0) { G.stage = 2.5; startSceneBlend(); }
+        }
+
+        // E. 玩家手绘成果注入并赋予风动摇摆动能
+        if(G.stage >= 2.5) {
+            ctx.save();
+            // 精准对接视频中山顶上那面红旗的相对坐标系与大小（52px, 52px）
+            drawWavingFlag(495, 114, 52, 52);
+            ctx.restore();
+        }
+
+        requestAnimationFrame(runLoop);
     }
 
-    document.getElementById('next-stage-btn').addEventListener('click', () => {
-        alert("🎉 序幕通关！下一关卡：【血战湘江·架设像素浮桥】正在解锁中...");
-    });
+    document.getElementById('btn-reload').addEventListener('click', () => location.reload());
+    
+    // 启动游戏引擎
+    requestAnimationFrame(runLoop);
 </script>
 </body>
 </html>
